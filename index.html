@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7fb">
+  <meta name="description" content="A handy collection of everyday developer tools.">
+  <title>Developer Toolbox</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="#" data-home>
+        <span class="brand-mark" aria-hidden="true">{ }</span>
+        <span>dev<span class="brand-light">tools</span></span>
+      </a>
+
+      <div class="workspace-label">WORKSPACE</div>
+      <nav class="primary-nav">
+        <button class="nav-link active" type="button" data-home>
+          <span class="nav-icon">▦</span> All tools
+          <span class="nav-count">8</span>
+        </button>
+        <button class="nav-link" type="button" data-category="Data">
+          <span class="nav-icon">⌘</span> Data &amp; formats
+        </button>
+        <button class="nav-link" type="button" data-category="Encoding">
+          <span class="nav-icon">⟷</span> Encoders
+        </button>
+        <button class="nav-link" type="button" data-category="Web">
+          <span class="nav-icon">◎</span> Web utilities
+        </button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="local-note">
+          <span class="local-dot"></span>
+          <div><strong>Runs in your browser</strong><small>Your data stays on your device</small></div>
+        </div>
+        <div class="sidebar-foot">DEVELOPER TOOLBOX <span>v1.0</span></div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="breadcrumbs"><span>Workspace</span><span class="crumb-sep">/</span><strong id="breadcrumb-current">All tools</strong></div>
+        <div class="topbar-actions">
+          <span class="keyboard-hint"><kbd>/</kbd> to search</span>
+          <span class="avatar" aria-label="Developer">D</span>
+        </div>
+      </header>
+
+      <section class="page" id="home-view">
+        <div class="hero">
+          <div class="hero-copy">
+            <div class="eyebrow"><span class="sparkle">✳</span> YOUR EVERYDAY DEV COMPANION</div>
+            <h1>Developer <span>Toolbox</span></h1>
+            <p>Small, useful tools that make the day-to-day a little easier.</p>
+          </div>
+          <div class="hero-art" aria-hidden="true">
+            <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div>
+            <div class="art-center">{<span>…</span>}</div>
+            <i class="art-dot dot-one"></i><i class="art-dot dot-two"></i><i class="art-dot dot-three"></i>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div>
+            <h2 id="listing-title">Your toolkit</h2>
+            <p id="listing-subtitle">8 utilities, ready when you are.</p>
+          </div>
+          <label class="search-box">
+            <span aria-hidden="true">⌕</span>
+            <input id="tool-search" type="search" placeholder="Find a tool..." autocomplete="off" aria-label="Find a tool">
+            <kbd>/</kbd>
+          </label>
+        </div>
+        <div class="filter-row" aria-label="Filter tools">
+          <button class="filter-chip selected" type="button" data-filter="All">All tools <span>8</span></button>
+          <button class="filter-chip" type="button" data-filter="Data">Data</button>
+          <button class="filter-chip" type="button" data-filter="Encoding">Encoding</button>
+          <button class="filter-chip" type="button" data-filter="Web">Web</button>
+        </div>
+        <div class="tool-grid" id="tool-grid" aria-live="polite"></div>
+        <div class="empty-state" id="empty-state" hidden>No tools match your search. Try another name.</div>
+        <footer class="page-footer"><span>Made for the curious.</span><span><i></i> Private by design</span></footer>
+      </section>
+
+      <section class="page tool-page" id="tool-view" hidden>
+        <button class="back-link" type="button" data-home>← <span>Back to all tools</span></button>
+        <div class="tool-heading">
+          <div class="tool-heading-icon" id="active-icon"></div>
+          <div><div class="eyebrow" id="active-category"></div><h1 id="active-title"></h1><p id="active-description"></p></div>
+        </div>
+        <div class="workspace-card" id="tool-workspace"></div>
+        <footer class="page-footer"><span>Made for the curious.</span><span><i></i> Private by design</span></footer>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
