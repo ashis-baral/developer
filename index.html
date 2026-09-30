@@ -20,7 +20,7 @@
       <nav class="primary-nav">
         <button class="nav-link active" type="button" data-home>
           <span class="nav-icon">▦</span> All tools
-          <span class="nav-count">30</span>
+          <span class="nav-count" id="tool-count">50</span>
         </button>
         <button class="nav-link" type="button" data-category="Data">
           <span class="nav-icon">⌘</span> Data &amp; formats
@@ -30,6 +30,9 @@
         </button>
         <button class="nav-link" type="button" data-category="Web">
           <span class="nav-icon">◎</span> Web utilities
+        </button>
+        <button class="nav-link" type="button" data-category="PDF & Images">
+          <span class="nav-icon">▧</span> PDF &amp; images
         </button>
       </nav>
 
@@ -68,7 +71,7 @@
         <div class="toolbar">
           <div>
             <h2 id="listing-title">Your toolkit</h2>
-            <p id="listing-subtitle">30 utilities, ready when you are.</p>
+            <p id="listing-subtitle">50 utilities, ready when you are.</p>
           </div>
           <label class="search-box">
             <span aria-hidden="true">⌕</span>
@@ -77,10 +80,11 @@
           </label>
         </div>
         <div class="filter-row" aria-label="Filter tools">
-          <button class="filter-chip selected" type="button" data-filter="All">All tools <span>30</span></button>
+          <button class="filter-chip selected" type="button" data-filter="All">All tools <span>50</span></button>
           <button class="filter-chip" type="button" data-filter="Data">Data</button>
           <button class="filter-chip" type="button" data-filter="Encoding">Encoding</button>
           <button class="filter-chip" type="button" data-filter="Web">Web</button>
+          <button class="filter-chip" type="button" data-filter="PDF & Images">PDF &amp; images <span>20</span></button>
         </div>
         <div class="tool-grid" id="tool-grid" aria-live="polite"></div>
         <div class="empty-state" id="empty-state" hidden>No tools match your search. Try another name.</div>

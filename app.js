@@ -28,7 +28,27 @@ const tools = [
   { id: "json-compare", name: "JSON Compare", description: "Compare two JSON payloads and flag structural differences.", category: "Data", icon: "⇔", tone: "violet" },
   { id: "line-numbering", name: "Line Numbering", description: "Add numbering to blocks of text without modifying the content.", category: "Data", icon: "1", tone: "blue" },
   { id: "checksum", name: "Checksum Tool", description: "Generate SHA-1 and SHA-256 checksums from text.", category: "Data", icon: "Σ", tone: "green" },
-  { id: "emoji-formatter", name: "Emoji Formatter", description: "Normalize emoji aliases into readable Unicode characters.", category: "Web", icon: "☺", tone: "pink" }
+  { id: "emoji-formatter", name: "Emoji Formatter", description: "Normalize emoji aliases into readable Unicode characters.", category: "Web", icon: "☺", tone: "pink" },
+  { id: "pdf-compress", name: "Compress PDF", description: "Reduce PDF size by rasterizing pages at a chosen quality.", category: "PDF & Images", icon: "↓", tone: "violet", kind: "pdf" },
+  { id: "pdf-merge", name: "Merge PDFs", description: "Combine multiple PDF files into one document.", category: "PDF & Images", icon: "＋", tone: "blue", kind: "pdf" },
+  { id: "pdf-split", name: "Split PDF", description: "Save every page of a PDF as a separate file.", category: "PDF & Images", icon: "⇱", tone: "green", kind: "pdf" },
+  { id: "pdf-to-jpg", name: "PDF to JPG", description: "Render PDF pages as JPG images and download them together.", category: "PDF & Images", icon: "J", tone: "orange", kind: "pdf" },
+  { id: "pdf-to-png", name: "PDF to PNG", description: "Render PDF pages as PNG images and download them together.", category: "PDF & Images", icon: "P", tone: "teal", kind: "pdf" },
+  { id: "pdf-page-count", name: "PDF Page Count", description: "Check page count and basic information about a PDF.", category: "PDF & Images", icon: "#", tone: "pink", kind: "pdf" },
+  { id: "pdf-rotate", name: "Rotate PDF Pages", description: "Rotate every page in a PDF by 90, 180, or 270 degrees.", category: "PDF & Images", icon: "↻", tone: "violet", kind: "pdf" },
+  { id: "pdf-delete-pages", name: "Delete PDF Pages", description: "Remove selected pages from a PDF document.", category: "PDF & Images", icon: "−", tone: "orange", kind: "pdf" },
+  { id: "pdf-extract-pages", name: "Extract PDF Pages", description: "Create a new PDF containing only the pages you choose.", category: "PDF & Images", icon: "⇥", tone: "blue", kind: "pdf" },
+  { id: "pdf-reorder", name: "Reorder PDF Pages", description: "Arrange every page in a custom order.", category: "PDF & Images", icon: "⇅", tone: "green", kind: "pdf" },
+  { id: "pdf-page-numbers", name: "Add PDF Page Numbers", description: "Stamp page numbers onto every page of a PDF.", category: "PDF & Images", icon: "1", tone: "teal", kind: "pdf" },
+  { id: "pdf-watermark", name: "PDF Watermark", description: "Add a translucent text watermark to all PDF pages.", category: "PDF & Images", icon: "W", tone: "pink", kind: "pdf" },
+  { id: "jpg-to-pdf", name: "JPG to PDF", description: "Turn one or more JPG images into a single PDF.", category: "PDF & Images", icon: "▤", tone: "orange", kind: "image" },
+  { id: "image-compressor", name: "Image Compressor", description: "Compress images and choose a smaller output format.", category: "PDF & Images", icon: "↓", tone: "green", kind: "image" },
+  { id: "image-resizer", name: "Image Resizer", description: "Resize images to exact dimensions while preserving aspect ratio if desired.", category: "PDF & Images", icon: "↔", tone: "violet", kind: "image" },
+  { id: "image-converter", name: "Image Format Converter", description: "Convert images between PNG, JPG, and WebP formats.", category: "PDF & Images", icon: "⇄", tone: "blue", kind: "image" },
+  { id: "image-rotate", name: "Rotate & Flip Image", description: "Rotate or flip images and download the edited result.", category: "PDF & Images", icon: "⤾", tone: "teal", kind: "image" },
+  { id: "image-crop", name: "Image Cropper", description: "Crop image files using pixel coordinates and dimensions.", category: "PDF & Images", icon: "▣", tone: "pink", kind: "image" },
+  { id: "image-dimensions", name: "Image Dimensions", description: "Inspect image dimensions, type, and file size.", category: "PDF & Images", icon: "⌗", tone: "orange", kind: "image" },
+  { id: "image-to-pdf", name: "Images to PDF", description: "Combine JPG, PNG, and WebP images into one PDF.", category: "PDF & Images", icon: "▧", tone: "violet", kind: "image" }
 ];
 
 const grid = document.querySelector("#tool-grid");
@@ -57,6 +77,11 @@ function renderTools() {
   `).join("");
 
   document.querySelector("#empty-state").hidden = filtered.length > 0;
+  document.querySelector("#tool-count").textContent = tools.length;
+  document.querySelectorAll(".filter-chip span").forEach((count) => {
+    const category = count.closest(".filter-chip").dataset.filter;
+    count.textContent = category === "All" ? tools.length : tools.filter((tool) => tool.category === category).length;
+  });
 }
 
 function showToast(message) {
@@ -98,7 +123,7 @@ function goHome(category = "All") {
 
   document.querySelector("#breadcrumb-current").textContent = category === "All" ? "All tools" : category;
   document.querySelector("#listing-title").textContent = category === "All" ? "Your toolkit" : `${category} tools`;
-  document.querySelector("#listing-subtitle").textContent = category === "All" ? "30 utilities, ready when you are." : `Explore ${category.toLowerCase()} utilities.`;
+  document.querySelector("#listing-subtitle").textContent = category === "All" ? `${tools.length} utilities, ready when you are.` : `Explore ${category.toLowerCase()} utilities.`;
 
   setActiveNav(category);
   renderTools();
@@ -119,7 +144,59 @@ const textArea = (id, placeholder, label) => `
 
 const copyButton = (target) => `<button class="btn" type="button" data-copy="${target}">Copy</button>`;
 
+function documentToolMarkup(id) {
+  const tool = tools.find((entry) => entry.id === id);
+  const isPdf = tool.kind === "pdf";
+  const accept = isPdf
+    ? ".pdf,application/pdf"
+    : id === "jpg-to-pdf"
+      ? ".jpg,.jpeg,image/jpeg"
+      : "image/*";
+  const multiple = id !== "pdf-page-count";
+  let options = "";
+
+  if (id === "pdf-compress") {
+    options = `<label class="control-label" for="document-quality">JPEG quality</label><input class="input" id="document-quality" type="number" min="0.2" max="0.95" step="0.05" value="0.65" style="width:90px"><label class="control-label" for="document-scale">Render scale</label><select class="select" id="document-scale"><option value="1">Standard</option><option value="1.25" selected>High</option><option value="1.5">Very high</option></select>`;
+  } else if (id === "pdf-to-jpg" || id === "pdf-to-png") {
+    options = `<label class="control-label" for="document-scale">Render scale</label><select class="select" id="document-scale"><option value="1">Standard</option><option value="1.5" selected>High</option><option value="2">Very high</option></select>`;
+  } else if (id === "pdf-rotate") {
+    options = `<label class="control-label" for="document-angle">Rotation</label><select class="select" id="document-angle"><option value="90">90° clockwise</option><option value="180">180°</option><option value="270">270° clockwise</option></select>`;
+  } else if (id === "pdf-delete-pages" || id === "pdf-extract-pages") {
+    options = `<label class="control-label" for="document-pages">Page numbers / ranges</label><input class="input" id="document-pages" placeholder="e.g. 1, 3-5" style="width:180px">`;
+  } else if (id === "pdf-reorder") {
+    options = `<label class="control-label" for="document-pages">New page order</label><input class="input" id="document-pages" placeholder="e.g. 3, 1, 2" style="width:180px">`;
+  } else if (id === "pdf-page-numbers") {
+    options = `<label class="control-label" for="document-start">Start at</label><input class="input" id="document-start" type="number" min="1" value="1" style="width:75px">`;
+  } else if (id === "pdf-watermark") {
+    options = `<label class="control-label" for="document-watermark">Watermark text</label><input class="input" id="document-watermark" placeholder="CONFIDENTIAL" maxlength="80" style="width:180px"><label class="control-label" for="document-opacity">Opacity</label><input class="input" id="document-opacity" type="number" min="0.1" max="0.8" step="0.1" value="0.25" style="width:75px">`;
+  } else if (id === "image-compressor") {
+    options = `<label class="control-label" for="document-format">Output</label><select class="select" id="document-format"><option value="image/webp">WebP</option><option value="image/jpeg">JPG</option><option value="image/png">PNG</option></select><label class="control-label" for="document-quality">Quality</label><input class="input" id="document-quality" type="number" min="0.1" max="1" step="0.05" value="0.75" style="width:85px">`;
+  } else if (id === "image-resizer") {
+    options = `<label class="control-label" for="document-width">Width</label><input class="input" id="document-width" type="number" min="1" max="12000" placeholder="px" style="width:85px"><label class="control-label" for="document-height">Height</label><input class="input" id="document-height" type="number" min="1" max="12000" placeholder="px" style="width:85px"><label class="control-label"><input id="document-aspect" type="checkbox" checked> Keep aspect ratio</label>`;
+  } else if (id === "image-converter") {
+    options = `<label class="control-label" for="document-format">Convert to</label><select class="select" id="document-format"><option value="image/png">PNG</option><option value="image/jpeg">JPG</option><option value="image/webp">WebP</option></select>`;
+  } else if (id === "image-rotate") {
+    options = `<label class="control-label" for="document-angle">Rotation</label><select class="select" id="document-angle"><option value="0">No rotation</option><option value="90">90° clockwise</option><option value="180">180°</option><option value="270">270° clockwise</option></select><label class="control-label"><input id="document-flip-horizontal" type="checkbox"> Flip horizontal</label><label class="control-label"><input id="document-flip-vertical" type="checkbox"> Flip vertical</label>`;
+  } else if (id === "image-crop") {
+    options = `<label class="control-label" for="document-x">X</label><input class="input" id="document-x" type="number" min="0" value="0" style="width:70px"><label class="control-label" for="document-y">Y</label><input class="input" id="document-y" type="number" min="0" value="0" style="width:70px"><label class="control-label" for="document-width">Width</label><input class="input" id="document-width" type="number" min="1" placeholder="px" style="width:80px"><label class="control-label" for="document-height">Height</label><input class="input" id="document-height" type="number" min="1" placeholder="px" style="width:80px">`;
+  }
+
+  const buttonLabel = id === "pdf-page-count" || id === "image-dimensions" ? "Inspect files" : "Process & download";
+  const note = id === "pdf-compress"
+    ? `<div class="helper-text">Pages are converted to compressed images, so the result keeps their appearance but text is no longer selectable or searchable. The output may be larger for some PDFs; its size change is reported after processing. Runs on this device.</div>`
+    : `<div class="helper-text">Files are processed in your browser and are not uploaded. Large files may take a while.</div>`;
+
+  return `${actionBar(`${options}<button class="btn btn-primary" type="button" data-run="${id}">${buttonLabel}</button>`)}
+    <label class="field-label" for="document-files">SELECT ${isPdf ? "PDF FILE" : "IMAGE FILES"}</label>
+    <input class="file-input" id="document-files" type="file" accept="${accept}" ${multiple ? "multiple" : ""}>
+    ${note}
+    <pre class="output-box document-output" id="${id}-output" aria-live="polite"></pre>
+    <div class="status-message" id="${id}-status" role="status"></div>`;
+}
+
 function toolMarkup(id) {
+  if (tools.some((tool) => tool.id === id && tool.kind)) return documentToolMarkup(id);
+
   switch (id) {
     case "json":
       return `${actionBar(`<button class="btn btn-primary" type="button" data-json="format">Format JSON</button><button class="btn" type="button" data-json="minify">Minify</button><button class="btn" type="button" data-json="validate">Validate</button>`) }
@@ -406,7 +483,414 @@ function stringifyValue(value) {
   return typeof value === "string" ? value : JSON.stringify(value, null, 2);
 }
 
+const libraryLoads = new Map();
+
+function loadLibrary(globalName, url) {
+  if (window[globalName]) return Promise.resolve(window[globalName]);
+  if (!libraryLoads.has(globalName)) {
+    const loading = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = url;
+      script.onload = () => window[globalName] ? resolve(window[globalName]) : reject(new Error(`${globalName} did not load correctly.`));
+      script.onerror = () => reject(new Error(`Could not load ${globalName}. Check your internet connection and try again.`));
+      document.head.append(script);
+    }).catch((error) => {
+      libraryLoads.delete(globalName);
+      throw error;
+    });
+    libraryLoads.set(globalName, loading);
+  }
+  return libraryLoads.get(globalName);
+}
+
+const loadPdfLib = () => loadLibrary("PDFLib", "https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js");
+const loadPdfJs = async () => {
+  const pdfjs = await loadLibrary("pdfjsLib", "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js");
+  pdfjs.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  return pdfjs;
+};
+const loadZip = () => loadLibrary("JSZip", "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js");
+
+function selectedDocumentFiles() {
+  const input = document.querySelector("#document-files");
+  const files = [...(input?.files || [])];
+  if (!files.length) throw new Error("Choose a file before processing.");
+  return files;
+}
+
+function documentOption(id) {
+  return document.querySelector(`#${id}`);
+}
+
+function parsePageNumbers(value, pageCount) {
+  const pages = [];
+  const parts = value.split(",").map((part) => part.trim()).filter(Boolean);
+  if (!parts.length) throw new Error("Enter one or more page numbers or ranges, such as 1, 3-5.");
+
+  for (const part of parts) {
+    const match = part.match(/^(\d+)(?:\s*-\s*(\d+))?$/);
+    if (!match) throw new Error(`Invalid page selection: ${part}`);
+    const first = Number(match[1]);
+    const last = Number(match[2] || match[1]);
+    if (first < 1 || last < first || last > pageCount) {
+      throw new Error(`Page selection "${part}" is outside the valid range 1-${pageCount}.`);
+    }
+    for (let page = first; page <= last; page += 1) pages.push(page - 1);
+  }
+
+  return [...new Set(pages)];
+}
+
+function getPdfRange(fileName) {
+  return fileName.replace(/\.pdf$/i, "") || "document";
+}
+
+function downloadBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = name;
+  anchor.style.display = "none";
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+
+async function downloadDocumentResults(results, archiveName) {
+  const names = new Set();
+  results.forEach((result) => {
+    const safeName = result.name.replace(/[<>:"/\\|?*\x00-\x1f]/g, "_");
+    let name = safeName;
+    let suffix = 2;
+    while (names.has(name.toLowerCase())) {
+      const dot = safeName.lastIndexOf(".");
+      name = dot > 0 ? `${safeName.slice(0, dot)}-${suffix}${safeName.slice(dot)}` : `${safeName}-${suffix}`;
+      suffix += 1;
+    }
+    result.name = name;
+    names.add(name.toLowerCase());
+  });
+  if (results.length === 1) {
+    downloadBlob(results[0].blob, results[0].name);
+    return;
+  }
+  const JSZip = await loadZip();
+  const archive = new JSZip();
+  results.forEach((result) => archive.file(result.name, result.blob));
+  downloadBlob(await archive.generateAsync({ type: "blob" }), archiveName);
+}
+
+async function renderPdfFile(file, scale, onPage) {
+  const pdfjs = await loadPdfJs();
+  const pdf = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+  try {
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      const page = await pdf.getPage(pageNumber);
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.ceil(viewport.width);
+      canvas.height = Math.ceil(viewport.height);
+      const context = canvas.getContext("2d", { alpha: false });
+      if (!context) throw new Error("This browser could not create an image canvas.");
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvasContext: context, viewport }).promise;
+      await onPage({ canvas, pageNumber, pageCount: pdf.numPages, width: viewport.width / scale, height: viewport.height / scale });
+      page.cleanup();
+      canvas.width = 0;
+      canvas.height = 0;
+    }
+  } finally {
+    await pdf.destroy();
+  }
+}
+
+function canvasBlob(canvas, type, quality) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("The browser could not encode this image format.")), type, quality);
+  });
+}
+
+async function bitmapFor(file) {
+  if (!window.createImageBitmap) throw new Error("This browser does not support image processing. Try a current version of Chrome, Edge, or Firefox.");
+  return createImageBitmap(file);
+}
+
+function imageCanvas(bitmap, width = bitmap.width, height = bitmap.height, background = null) {
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width < 1 || height < 1 || width > 12000 || height > 12000) {
+    throw new Error("Image dimensions must be between 1 and 12,000 pixels.");
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(width);
+  canvas.height = Math.round(height);
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("This browser could not create an image canvas.");
+  if (background) {
+    context.fillStyle = background;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  return { canvas, context };
+}
+
+function imageOutputExtension(mime) {
+  return mime === "image/jpeg" ? "jpg" : mime === "image/png" ? "png" : "webp";
+}
+
+function outputBaseName(file, index, total, extension) {
+  const base = file.name.replace(/\.[^.]+$/, "").replace(/[<>:"/\\|?*\x00-\x1f]/g, "_") || "image";
+  return `${base}${total > 1 ? `-${index + 1}` : ""}.${extension}`;
+}
+
+async function runPdfTool(id, files) {
+  const PDFLib = await loadPdfLib();
+  const { PDFDocument, StandardFonts, rgb, degrees } = PDFLib;
+  const output = [];
+
+  if (id === "pdf-merge") {
+    if (files.length < 2) throw new Error("Select at least two PDFs to merge.");
+    const merged = await PDFDocument.create();
+    for (const file of files) {
+      const source = await PDFDocument.load(await file.arrayBuffer());
+      const pages = await merged.copyPages(source, source.getPageIndices());
+      pages.forEach((page) => merged.addPage(page));
+    }
+    output.push({ blob: new Blob([await merged.save()], { type: "application/pdf" }), name: "merged.pdf" });
+  } else if (id === "pdf-page-count") {
+    const pdf = await PDFDocument.load(await files[0].arrayBuffer());
+    const pages = pdf.getPages();
+    const metadata = pdf.getTitle() ? `\nTitle: ${pdf.getTitle()}` : "";
+    documentOption("pdf-page-count-output").textContent = `${files[0].name}\nPages: ${pages.length}\nFile size: ${(files[0].size / 1024).toFixed(1)} KB${metadata}`;
+    setStatus("pdf-page-count-status", "PDF information read", false);
+    return;
+  } else if (id === "pdf-to-jpg" || id === "pdf-to-png" || id === "pdf-compress") {
+    const scale = Number(documentOption("document-scale").value);
+    const quality = id === "pdf-compress" ? Number(documentOption("document-quality").value) : 0.65;
+    if (id === "pdf-compress" && (quality < 0.2 || quality > 0.95)) throw new Error("Choose JPEG quality from 0.2 to 0.95.");
+    for (const [fileIndex, file] of files.entries()) {
+      if (id === "pdf-compress") {
+        const compressed = await PDFDocument.create();
+        await renderPdfFile(file, scale, async ({ canvas, pageNumber, pageCount, width, height }) => {
+          const jpg = await canvasBlob(canvas, "image/jpeg", quality);
+          const image = await compressed.embedJpg(await jpg.arrayBuffer());
+          const page = compressed.addPage([width, height]);
+          page.drawImage(image, { x: 0, y: 0, width, height });
+          setStatus(id + "-status", `Compressing ${file.name}... page ${pageNumber} of ${pageCount}`, false);
+        });
+        output.push({ blob: new Blob([await compressed.save()], { type: "application/pdf" }), name: `${getPdfRange(file.name)}-compressed.pdf` });
+      } else {
+        const extension = id === "pdf-to-jpg" ? "jpg" : "png";
+        const mime = id === "pdf-to-jpg" ? "image/jpeg" : "image/png";
+        await renderPdfFile(file, scale, async ({ canvas, pageNumber }) => {
+          output.push({
+            blob: await canvasBlob(canvas, mime, 0.9),
+            name: `${getPdfRange(file.name)}-page-${String(pageNumber).padStart(3, "0")}.${extension}`
+          });
+        });
+      }
+      if (fileIndex < files.length - 1) setStatus(id + "-status", `Processed ${fileIndex + 1} of ${files.length} PDFs...`, false);
+    }
+  } else {
+    for (const file of files) {
+      const pdf = await PDFDocument.load(await file.arrayBuffer());
+      const pages = pdf.getPages();
+
+      if (id === "pdf-split") {
+        for (const [index] of pages.entries()) {
+          const split = await PDFDocument.create();
+          split.addPage((await split.copyPages(pdf, [index]))[0]);
+          output.push({ blob: new Blob([await split.save()], { type: "application/pdf" }), name: `${getPdfRange(file.name)}-page-${String(index + 1).padStart(3, "0")}.pdf` });
+        }
+      } else if (id === "pdf-delete-pages" || id === "pdf-extract-pages") {
+        const selected = parsePageNumbers(documentOption("document-pages").value, pages.length);
+        const kept = id === "pdf-delete-pages"
+          ? pages.map((_, index) => index).filter((index) => !selected.includes(index))
+          : selected;
+        if (!kept.length) throw new Error("This operation would create an empty PDF. Select fewer pages to delete.");
+        const result = await PDFDocument.create();
+        const copied = await result.copyPages(pdf, kept);
+        copied.forEach((page) => result.addPage(page));
+        output.push({ blob: new Blob([await result.save()], { type: "application/pdf" }), name: `${getPdfRange(file.name)}-${id === "pdf-delete-pages" ? "edited" : "extracted"}.pdf` });
+      } else if (id === "pdf-reorder") {
+        const entries = documentOption("document-pages").value.split(",").map((value) => value.trim());
+        if (entries.length !== pages.length || entries.some((entry) => !/^\d+$/.test(entry))) {
+          throw new Error(`Enter every page exactly once as a comma-separated list from 1 to ${pages.length}.`);
+        }
+        const order = entries.map(Number);
+        if (new Set(order).size !== pages.length || order.some((page) => page < 1 || page > pages.length)) {
+          throw new Error(`The new order must contain every page from 1 to ${pages.length} exactly once.`);
+        }
+        const result = await PDFDocument.create();
+        const copied = await result.copyPages(pdf, order.map((page) => page - 1));
+        copied.forEach((page) => result.addPage(page));
+        output.push({ blob: new Blob([await result.save()], { type: "application/pdf" }), name: `${getPdfRange(file.name)}-reordered.pdf` });
+      } else if (id === "pdf-rotate") {
+        const angle = Number(documentOption("document-angle").value);
+        pages.forEach((page) => page.setRotation(degrees((page.getRotation().angle + angle) % 360)));
+        output.push({ blob: new Blob([await pdf.save()], { type: "application/pdf" }), name: `${getPdfRange(file.name)}-rotated.pdf` });
+      } else if (id === "pdf-page-numbers") {
+        const start = Number(documentOption("document-start").value);
+        if (!Number.isInteger(start) || start < 1) throw new Error("The starting page number must be a positive integer.");
+        const font = await pdf.embedFont(StandardFonts.Helvetica);
+        pages.forEach((page, index) => {
+          const { width } = page.getSize();
+          const text = String(start + index);
+          page.drawText(text, { x: (width - font.widthOfTextAtSize(text, 10)) / 2, y: 18, size: 10, font, color: rgb(0.35, 0.35, 0.35) });
+        });
+        output.push({ blob: new Blob([await pdf.save()], { type: "application/pdf" }), name: `${getPdfRange(file.name)}-numbered.pdf` });
+      } else if (id === "pdf-watermark") {
+        const text = documentOption("document-watermark").value.trim();
+        const opacity = Number(documentOption("document-opacity").value);
+        if (!text) throw new Error("Enter watermark text.");
+        if (opacity < 0.1 || opacity > 0.8) throw new Error("Choose watermark opacity from 0.1 to 0.8.");
+        const font = await pdf.embedFont(StandardFonts.HelveticaBold);
+        pages.forEach((page) => {
+          const { width, height } = page.getSize();
+          const size = Math.min(48, Math.max(18, width / (text.length * 0.8)));
+          const textWidth = font.widthOfTextAtSize(text, size);
+          page.drawText(text, { x: (width - textWidth) / 2, y: height / 2, size, font, color: rgb(0.55, 0.55, 0.55), opacity, rotate: degrees(-35) });
+        });
+        output.push({ blob: new Blob([await pdf.save()], { type: "application/pdf" }), name: `${getPdfRange(file.name)}-watermarked.pdf` });
+      }
+    }
+  }
+
+  await downloadDocumentResults(output, `${id}.zip`);
+  if (id === "pdf-compress") {
+    const inputSize = files.reduce((total, file) => total + file.size, 0);
+    const outputSize = output.reduce((total, file) => total + file.blob.size, 0);
+    const difference = Math.round(Math.abs(1 - outputSize / inputSize) * 100);
+    const result = outputSize <= inputSize ? `${difference}% smaller` : `${difference}% larger`;
+    setStatus(id + "-status", `Done. Downloaded ${output.length} ${output.length === 1 ? "PDF" : "PDFs"}; the PDF data is ${result} (${(inputSize / 1024).toFixed(0)} KB → ${(outputSize / 1024).toFixed(0)} KB).`, outputSize > inputSize);
+  } else {
+    setStatus(id + "-status", `Done. Downloaded ${output.length} ${output.length === 1 ? "file" : "files"}.`, false);
+  }
+}
+
+async function runImageTool(id, files) {
+  if (id === "image-dimensions") {
+    const details = [];
+    for (const file of files) {
+      const bitmap = await bitmapFor(file);
+      details.push(`${file.name}\n  Dimensions: ${bitmap.width} × ${bitmap.height} px\n  Type: ${file.type || "unknown"}\n  File size: ${(file.size / 1024).toFixed(1)} KB`);
+      bitmap.close();
+    }
+    documentOption(id + "-output").textContent = details.join("\n\n");
+    setStatus(id + "-status", `Read ${files.length} ${files.length === 1 ? "image" : "images"}.`, false);
+    return;
+  }
+
+  if (id === "jpg-to-pdf" || id === "image-to-pdf") {
+    const PDFLib = await loadPdfLib();
+    const pdf = await PDFLib.PDFDocument.create();
+    for (const file of files) {
+      if (id === "jpg-to-pdf" && file.type !== "image/jpeg" && (file.type || !/\.jpe?g$/i.test(file.name))) {
+        throw new Error(`"${file.name}" is not a JPG image.`);
+      }
+      const bitmap = await bitmapFor(file);
+      const { canvas, context } = imageCanvas(bitmap.width, bitmap.height);
+      context.drawImage(bitmap, 0, 0);
+      const imageBytes = await (await canvasBlob(canvas, "image/png")).arrayBuffer();
+      const image = await pdf.embedPng(imageBytes);
+      const scale = Math.min(0.75, 1000 / bitmap.width, 1000 / bitmap.height);
+      const page = pdf.addPage([bitmap.width * scale, bitmap.height * scale]);
+      page.drawImage(image, { x: 0, y: 0, width: bitmap.width * scale, height: bitmap.height * scale });
+      bitmap.close();
+      canvas.width = 0;
+      canvas.height = 0;
+    }
+    downloadBlob(new Blob([await pdf.save()], { type: "application/pdf" }), id === "jpg-to-pdf" ? "images.pdf" : "images-to-pdf.pdf");
+    setStatus(id + "-status", "Done. Downloaded the PDF.", false);
+    return;
+  }
+
+  const mime = id === "image-compressor" ? documentOption("document-format").value
+    : id === "image-converter" ? documentOption("document-format").value
+      : id === "image-rotate" ? "image/png"
+        : "image/png";
+  const qualityInput = documentOption("document-quality");
+  const quality = qualityInput ? Number(qualityInput.value) : 0.85;
+  if ((id === "image-compressor" || mime === "image/jpeg" || mime === "image/webp") && (quality < 0.1 || quality > 1)) {
+    throw new Error("Choose image quality from 0.1 to 1.");
+  }
+  const results = [];
+
+  for (const [index, file] of files.entries()) {
+    const bitmap = await bitmapFor(file);
+    let canvas;
+
+    if (id === "image-resizer") {
+      const width = Number(documentOption("document-width").value);
+      const height = Number(documentOption("document-height").value);
+      if (!width || !height) throw new Error("Enter both the new image width and height.");
+      const keepAspect = documentOption("document-aspect").checked;
+      const ratio = keepAspect ? Math.min(width / bitmap.width, height / bitmap.height) : 1;
+      const outputWidth = keepAspect ? Math.max(1, Math.round(bitmap.width * ratio)) : width;
+      const outputHeight = keepAspect ? Math.max(1, Math.round(bitmap.height * ratio)) : height;
+      ({ canvas } = imageCanvas(bitmap, outputWidth, outputHeight));
+      canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    } else if (id === "image-rotate") {
+      const angle = Number(documentOption("document-angle").value);
+      const flipX = documentOption("document-flip-horizontal").checked;
+      const flipY = documentOption("document-flip-vertical").checked;
+      const swaps = angle === 90 || angle === 270;
+      ({ canvas } = imageCanvas(bitmap, swaps ? bitmap.height : bitmap.width, swaps ? bitmap.width : bitmap.height));
+      const context = canvas.getContext("2d");
+      context.translate(canvas.width / 2, canvas.height / 2);
+      context.rotate(angle * Math.PI / 180);
+      context.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+      context.drawImage(bitmap, -bitmap.width / 2, -bitmap.height / 2);
+    } else if (id === "image-crop") {
+      const x = Number(documentOption("document-x").value);
+      const y = Number(documentOption("document-y").value);
+      const width = Number(documentOption("document-width").value);
+      const height = Number(documentOption("document-height").value);
+      if (!width || !height || x < 0 || y < 0 || x + width > bitmap.width || y + height > bitmap.height) {
+        throw new Error(`Crop area must fit inside "${file.name}" (${bitmap.width} × ${bitmap.height} px).`);
+      }
+      ({ canvas } = imageCanvas(bitmap, width, height));
+      canvas.getContext("2d").drawImage(bitmap, x, y, width, height, 0, 0, width, height);
+    } else {
+      const background = mime === "image/jpeg" ? "#ffffff" : null;
+      ({ canvas } = imageCanvas(bitmap, bitmap.width, bitmap.height, background));
+      canvas.getContext("2d").drawImage(bitmap, 0, 0);
+    }
+
+    const blob = await canvasBlob(canvas, mime, quality);
+    if (blob.type !== mime) {
+      throw new Error(`This browser does not support ${imageOutputExtension(mime).toUpperCase()} output.`);
+    }
+    const extension = imageOutputExtension(mime);
+    results.push({ blob, name: outputBaseName(file, index, files.length, extension) });
+    bitmap.close();
+    canvas.width = 0;
+    canvas.height = 0;
+  }
+
+  await downloadDocumentResults(results, `${id}-images.zip`);
+  setStatus(id + "-status", `Done. Downloaded ${results.length} ${results.length === 1 ? "image" : "images"}.`, false);
+}
+
+async function runDocumentTool(id) {
+  try {
+    const files = selectedDocumentFiles();
+    setStatus(id + "-status", "Processing files locally...", false);
+    if (id.startsWith("pdf-")) {
+      await runPdfTool(id, files);
+    } else {
+      await runImageTool(id, files);
+    }
+  } catch (error) {
+    setStatus(id + "-status", `Could not process files: ${error.message || "Unknown error."}`);
+  }
+}
+
 function runTool(id) {
+  if (tools.some((tool) => tool.id === id && tool.kind)) {
+    runDocumentTool(id);
+    return;
+  }
+
   if (id === "json") {
     const input = document.querySelector("#json-input").value;
     const output = document.querySelector("#json-output");

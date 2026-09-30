@@ -112,6 +112,11 @@ h1, h2, p { margin: 0; }
 .editor:focus, .input:focus, .select:focus { border-color: #b8abfa; box-shadow: 0 0 0 3px rgba(117,97,220,.09); }
 .output-box { background: #fbfcfe; border: 1px solid #e7eaf1; border-radius: 7px; color: #475269; font: 11px/1.65 "DM Mono", Consolas, monospace; min-height: 120px; overflow-wrap: anywhere; padding: 13px; white-space: pre-wrap; }
 .input { background: #fff; border: 1px solid #e5e9f0; border-radius: 6px; color: #354057; font-size: 11px; min-height: 34px; outline: 0; padding: 8px 10px; }
+.file-input { background: #fbfcfe; border: 1px dashed #d9deea; border-radius: 7px; color: #6f7a90; display: block; font-size: 11px; padding: 15px; width: 100%; }
+.file-input::file-selector-button { background: #f1efff; border: 0; border-radius: 5px; color: #6251c0; cursor: pointer; font: 600 10px "DM Sans", "Segoe UI", sans-serif; margin-right: 12px; padding: 8px 11px; }
+.file-input:focus { border-color: #b8abfa; box-shadow: 0 0 0 3px rgba(117,97,220,.09); outline: 0; }
+.control-label input[type="checkbox"] { accent-color: var(--purple); vertical-align: middle; }
+.document-output:empty { display: none; }
 .select { background: #fff; border: 1px solid #e5e9f0; border-radius: 6px; color: #59647a; font-size: 10px; min-height: 33px; outline: 0; padding: 0 9px; }
 .btn { align-items: center; background: white; border: 1px solid #e2e6ee; border-radius: 6px; color: #626d82; cursor: pointer; display: inline-flex; font-size: 10px; gap: 6px; justify-content: center; min-height: 33px; padding: 0 12px; transition: .15s; }
 .btn:hover { background: #f8f7ff; border-color: #cfc6ff; color: #6753cf; }
